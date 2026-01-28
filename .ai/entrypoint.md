@@ -1,5 +1,2 @@
-LOAD RULES IN ORDER:
+LOAD: globals.runtime.md → node/* → db/* → .ai/repo.md
 
-1. globals.runtime.md
-2. Domain rules if applicable
-3. Repo-specific rules (.ai/repo.md)

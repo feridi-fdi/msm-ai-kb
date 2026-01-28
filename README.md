@@ -19,7 +19,8 @@ This repository contains:
 ├── node/                   # Node.js-specific rules
 │   ├── runtime.md          # Node.js runtime constraints
 │   ├── sonar.md            # SonarQube quality gates
-│   └── lint.md             # Linting rules
+│   ├── lint.md             # Linting rules
+│   └── dependencies.md     # Dependency abstraction rules
 ├── db/                     # Database rules
 │   └── postgres.md         # PostgreSQL best practices
 └── sync-ai-rules.sh        # Sync script for multi-repo setup
@@ -120,29 +121,31 @@ EOF
 - **Runtime**: Node.js LTS 24 (unless overridden)
 - **Quality**: Zero Sonar issues, ≥90% test coverage
 - **Database**: ORM mandatory; raw SQL only for justified exceptions
+- **Dependencies**: External libraries must be wrapped in abstraction layer
 
 ### Database Access
 - Use ORM by default (e.g., TypeORM)
 - Raw SQL allowed only for:
   - `dblink` operations
   - Unsupported ORM features
+
+### Dependency Management
+- **Never import external libraries directly** in business logic
+- Create abstraction layer in `app/utils/` folder (e.g., `validator.util.js`)
+- Business modules import from abstraction, not from `node_modules`
+- Benefits: Easy library replacement, no duplication, single point of change
+
+**Example:**
+```javascript
+// ❌ BAD - Direct import everywhere
+import Joi from 'joi';
+
+// ✅ GOOD - Import from abstraction
+import { validator } from '@/utils';
+```
 - Must be: isolated, documented, parameterized, tested
 
 ## 🔧 Customization
-
-### Adding Domain Rules
-
-Create new domain folders in `.ai/`:
-
-```bash
-mkdir -p .ai/python
-cat > .ai/python/runtime.md <<'EOF'
-# Python Runtime Rules
-- Target Python 3.11+
-- Use type hints
-- Follow PEP 8
-EOF
-```
 
 ### Project-Specific Overrides
 
@@ -161,10 +164,20 @@ EXCEPTIONS
 
 ## 🤖 How AI Assistants Use These Rules
 
+### GitHub Copilot
 1. **GitHub Copilot** reads `.github/copilot-instructions.md`
 2. Instructions point to `.ai/entrypoint.md`
 3. Rules are loaded in order: globals → domain → repo
 4. AI assistant applies constraints during code generation
+
+### Codex CLI
+Use with codex CLI tool:
+
+```bash
+codex -- "$(cat .ai/entrypoint.md)"
+```
+
+This loads all rules directly into codex context.
 
 ## 🔄 Keeping Rules Updated
 
